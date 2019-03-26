@@ -3,9 +3,12 @@
 <ul>
   <% @meal.ingredients.each do |ingredient| %>
     <li>
-      <%= "#{ingredient.name}" + " measure: " + "#{Recipe.find_by(meal_id: @meal.id, ingredient_id: ingredient.id).measure}" %>
+      <%= link_to ingredient.name, ingredient %>
+      <%= Recipe.find_by(meal_id: @meal.id, ingredient_id: ingredient.id).measure %>
     </li>
   <% end %>
 </ul>
 
 <%=image_tag image_url(@meal.img_url)%>
+
+<%# add video url here %>
