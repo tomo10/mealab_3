@@ -1,0 +1,12 @@
+<div class="grid-container">
+
+
+<% @ingredients.each do |ing| %>
+  <div>
+    <%= image_tag image_url("https://www.themealdb.com/images/ingredients/#{ing.name}-small.png") %>
+    <%= link_to ing.name, ing %>
+  </div>
+<%end%>
+
+
+</div>
