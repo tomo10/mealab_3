@@ -6,67 +6,71 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 
-
 Recipe.destroy_all
 Meal.destroy_all
 Category.destroy_all
 Ingredient.destroy_all
-
-
 
 def get_data(url)
   response = RestClient.get(url)
   data = JSON.parse(response)
 end
 
+  categories = get_data("https://www.themealdb.com/api/json/v1/1/list.php?c=list")
+  ingredients = get_data("https://www.themealdb.com/api/json/v1/1/list.php?i=list")
+  # allmeals = get_data("https://www.themealdb.com/api/json/v1/1/search.php?s=a")
 
+  flat = []
+  meal = []
+  categories["meals"].each do |category|
+    m = get_data("https://www.themealdb.com/api/json/v1/1/filter.php?c=#{category["strCategory"]}")
+    meal << m["meals"]
+    flat = meal.flatten
+  end
 
-  cats = get_data("https://www.themealdb.com/api/json/v1/1/list.php?c=list")
-  ing = get_data("https://www.themealdb.com/api/json/v1/1/list.php?i=list")
-  allmeals = get_data("https://www.themealdb.com/api/json/v1/1/search.php?s=%")
+  array_ids = flat.map {|f| f["idMeal"]}
+
+  meals_array = []
+  allmeals = []
+  array_ids.each do |id|
+    m = get_data("https://www.themealdb.com/api/json/v1/1/lookup.php?i=#{id}")
+    meals_array << m["meals"]
+    allmeals = meals_array.flatten
+  end
+
 
   # get all catergories.
-  cats["meals"].each do |cat|
-      cat = Category.create(name: cat["strCategory"])
+  categories["meals"].each do |category|
+    category = Category.create(name: category["strCategory"])
   end
 
   # get all ingredients.
-  ing["meals"].each do |cat|
-      cat = Ingredient.create(name: cat["strIngredient"])
+  ingredients["meals"].each do |ingredient|
+    ingredient = Ingredient.create(name: ingredient["strIngredient"])
   end
 
   # get all meals
-  allmeals["meals"].each do |meal|
-
-      m = Meal.new()
-      m.name = meal["strMeal"]
-      c1 = Category.find_by name: meal["strCategory"]
-      m.category_id = c1.id
-      m.save
-
+  allmeals.each do |meal|
+    new_meal = Meal.new()
+    new_meal.name = meal["strMeal"]
+    new_meal.img_url = meal["strMealThumb"]
+    category1 = Category.find_by name: meal["strCategory"]
+      new_meal.category_id = category1.id
+      new_meal.save
       counter = 1
-
-      while counter < 21
-
+        while counter < 21
           if meal["strIngredient" + counter.to_s] != nil && meal["strIngredient" + counter.to_s] != ""
-
-              strIngredient = meal["strIngredient" + counter.to_s].split.map(&:capitalize).join(' ')
-
-              i1 = Ingredient.find_by name: strIngredient
-
-              if i1 != nil
-                r1 = Recipe.new()
-                r1.meal_id = m.id
-                r1.ingredient_id = i1.id
+            strIngredient = meal["strIngredient" + counter.to_s].split.map(&:capitalize).join(' ')
+            ingredient1 = Ingredient.find_by name: strIngredient
+              if ingredient1 != nil
+                recipe1 = Recipe.new()
+                recipe1.meal_id = new_meal.id
+                recipe1.ingredient_id = ingredient1.id
                 #get measures
-                r1.measure = meal["strMeasure" + counter.to_s]
-                r1.save
+                recipe1.measure = meal["strMeasure" + counter.to_s]
+                recipe1.save
               end
-
           end
-
-          counter+=1
-
+      counter+=1
       end
-
   end
